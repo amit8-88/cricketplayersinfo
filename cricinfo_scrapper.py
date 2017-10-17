@@ -30,14 +30,29 @@ class CricInfoScrapeSpider(scrapy.Spider):
         for url in urlPath.extract()[1:-1]:
             url = "http://www.espncricinfo.com" + url
             request = scrapy.Request(url, self.parse_player_details)
+            request.meta['url']=url
             yield request
 
     def parse_player_details(self, response):
         sel = Selector(text=response.body_as_unicode(), type="html")
-        urlPath = sel.xpath(
+        name = sel.xpath(
             '//div[@class="ciPlayernametxt"]/div/h1/text()'
         )
 
+        dob_place=sel.xpath(
+            '//p[@class="ciPlayerinformationtxt"]/b[contains(text(), "Born")]/following-sibling::span/text()'
+        )
+
+        teams=sel.xpath(
+            '//p[@class="ciPlayerinformationtxt"]/b[contains(text(), "Major teams")]/following-sibling::span/text()'
+        )
+
+
+
         yield {
-            "player_name": urlPath.extract()[0]
+            "name": name.extract()[0],
+            "url": response.meta['url'],
+            "born": dob_place.extract()[0],
+            "teams": teams.extract()[0]
+
         }
